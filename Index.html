@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Clone with Firebase Auth</title>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // Firebase configuration (Replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtAsCAld8L6Gn96mkDYXQZSMqQyf0TYxI",
+      authDomain: "simple-login-3f73a.firebaseapp.com",
+      projectId: "simple-login-3f73a",
+      storageBucket: "simple-login-3f73a.firebasestorage.app",
+      messagingSenderId: "622220968094",
+      appId: "1:622220968094:web:c219e77b41b4222555fb8f",
+      measurementId: "G-5LMTNYDPSB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    window.firebaseAuth = auth;
+    window.firebaseDb = db;
+    window.provider = provider;
+    window.signInWithPopup = signInWithPopup;
+    window.signOut = signOut;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+  </script>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #fff;
+      color: #202124;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .menu-icon {
+      font-size: 24px;
+      cursor: pointer;
+      color: #5f6368;
+    }
+
+    .profile-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .profile-icon:hover {
+      opacity: 0.8;
+    }
+
+    .sign-in-btn {
+      padding: 8px 16px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .sign-in-btn:hover {
+      background: #3367d6;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .logo {
+      font-size: 84px;
+      font-weight: 300;
+      color: #4285f4;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 584px;
+      margin-bottom: 30px;
+    }
+
+    .inputbox {
+      width: 100%;
+      padding: 18px 48px 18px 18px;
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      outline: none;
+      font-size: 16px;
+      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+      transition: box-shadow 0.2s;
+    }
+
+    .inputbox:focus {
+      box-shadow: 0 2px 10px rgba(32, 33, 36, 0.28);
+    }
+
+    .mic-icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #9aa0a6;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .mic-icon:hover {
+      color: #4285f4;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .s-btn {
+      padding: 12px 24px;
+      border: 1px solid #f8f9fa;
+      border-radius: 4px;
+      background: #f8f9fa;
+      color: #3c4043;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    .s-btn:hover {
+      background: #f1f3f4;
+      box-shadow: 0 1px 3px rgba(60, 64, 67, 0.302);
+    }
+
+    .footer {
+      background: #f2f2f2;
+      padding: 15px 30px;
+      border-top: 1px solid #dadce0;
+      font-size: 14px;
+      color: #70757a;
+    }
+
+    .footer-top {
+      border-bottom: 1px solid #dadce0;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #70757a;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* Profile Modal */
+    .profile-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .profile-modal.show {
+      display: flex;
+    }
+
+    .profile-content {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 20px;
+    }
+
+    .profile-name {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .profile-email {
+      color: #5f6368;
+      margin-bottom: 20px;
+    }
+
+    .sign-out-btn {
+      padding: 10px 20px;
+      background: #ea4335;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .sign-out-btn:hover {
+      background: #d33b2c;
+    }
+
+    /* History Sidebar */
+    .history-sidebar {
+      position: fixed;
+      left: -400px;
+      top: 0;
+      width: 350px;
+      height: 100%;
+      background: #fff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow-y: auto;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+
+    .history-sidebar.show {
+      left: 0;
+    }
+
+    .history-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      color: #202124;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e8eaed;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .history-item:hover {
+      background: #f8f9fa;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ea4335;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .no-history {
+      text-align: center;
+      color: #9aa0a6;
+      margin-top: 20px;
+    }
+
+    .clear-history {
+      margin-top: 20px;
+      padding: 10px;
+      background: #ea4335;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      transition: opacity 0.3s;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+
+    /* Dark Mode */
+    body.dark {
+      background: #202124;
+      color: #e8eaed;
+    }
+
+    body.dark .header,
+    body.dark .footer,
+    body.dark .profile-content,
+    body.dark .history-sidebar {
+      background: #303134;
+    }
+
+    body.dark .inputbox {
+      background: #303134;
+      color: #e8eaed;
+      border-color: #5f6368;
+    }
+
+    body.dark .s-btn {
+      background: #303134;
+      color: #e8eaed;
+      border-color: #5f6368;
+    }
+
+    body.dark .s-btn:hover {
+      background: #3c4043;
+    }
+
+    body.dark .mic-icon {
+      color: #9aa0a6;
+    }
+
+    body.dark .mic-icon:hover {
+      color: #8ab4f8;
+    }
+
+    body.dark .history-item:hover {
+      background: #303134;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .logo {
+        font-size: 64px;
+      }
+      .search-wrapper {
+        max-width: 90%;
+      }
+      .buttons {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .footer-links {
+        flex-direction: column;
+        align-items: center;
+      }
+      .history-sidebar {
+        width: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <i class="fas fa-bars menu-icon" onclick="toggleHistory()"></i>
+    </div>
+    <div class="header-right">
+      <button class="s-btn" onclick="toggleDark()">Dark Mode</button>
+      <div id="auth-section">
+        <button class="sign-in-btn" onclick="signIn()">Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="logo">Google</div>
+    <form class="search-form" action="https://www.google.com/search" method="get" onsubmit="saveSearch(document.querySelector('.inputbox').value)">
+      <div class="search-wrapper">
+        <input type="text" name="q" class="inputbox" placeholder="Search Google or type a URL" autocomplete="off">
+        <i class="fas fa-microphone mic-icon" onclick="startVoice()"></i>
+      </div>
+      <div class="buttons">
+        <input type="submit" class="s-btn" value="Google Search">
+        <button type="button" class="s-btn" onclick="feelingLucky()">I'm Feeling Lucky</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer">
+    <div class="footer-top">
+      <span>India</span>
+    </div>
+    <div class="footer-links">
+      <div>
+        <a href="https://about.google/" target="_blank">About</a>
+        <a href="https://ads.google.com/" target="_blank">Advertising</a>
+        <a href="https://www.google.com/business/" target="_blank">Business</a>
+        <a href="https://www.google.com/search/howsearchworks/" target="_blank">How Search works</a>
+      </div>
+      <div>
+        <a href="https://policies.google.com/privacy" target="_blank">Privacy</a>
+        <a href="https://policies.google.com/terms" target="_blank">Terms</a>
+        <a href="https://www.google.com/preferences" target="_blank">Settings</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal" id="profileModal">
+    <div class="profile-content">
+      <img id="profilePic" class="profile-pic" src="" alt="Profile Picture">
+      <div class="profile-name" id="profileName"></div>
+      <div class="profile-email" id="profileEmail"></div>
+      <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- History Sidebar -->
+  <div class="history-sidebar" id="historySidebar">
+    <div class="history-title">Search History</div>
+    <div id="historyList"></div>
+    <button class="clear-history" onclick="clearHistory()">Clear All History</button>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="hideHistory()"></div>
+
+  <script>
+    const historySidebar = document.getElementById('historySidebar');
+    const overlay = document.getElementById('overlay');
+    const historyList = document.getElementById('historyList');
+    const profileModal = document.getElementById('profileModal');
+    const authSection = document.getElementById('auth-section');
+
+    let currentUser = null;
+
+    // Auth state listener
+    onAuthStateChanged(window.firebaseAuth, async (user) => {
+      if (user) {
+        currentUser = user;
+        // Save user data to Firestore
+        await saveUserData(user);
+        // Update UI
+        authSection.innerHTML = `<img src="${user.photoURL}" class="profile-icon" onclick="showProfile()" alt="Profile">`;
+      } else {
+        currentUser = null;
+        authSection.innerHTML = `<button class="sign-in-btn" onclick="signIn()">Sign In</button>`;
+      }
+    });
+
+    async function saveUserData(user) {
+      const userDoc = doc(window.firebaseDb, 'users', user.uid);
+      await setDoc(userDoc, {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        lastLogin: new Date()
+      }, { merge: true });
+    }
+
+    async function signIn() {
+      try {
+        const result = await signInWithPopup(window.firebaseAuth, window.provider);
+        console.log('User signed in:', result.user);
+      } catch (error) {
+        console.error('Sign-in error:', error);
+        alert('Sign-in failed. Please try again.');
+      }
+    }
+
+    async function signOutUser() {
+      try {
+        await signOut(window.firebaseAuth);
+        profileModal.classList.remove('show');
+        console.log('User signed out');
+      } catch (error) {
+        console.error('Sign-out error:', error);
+      }
+    }
+
+    function showProfile() {
+      if (currentUser) {
+        document.getElementById('profilePic').src = currentUser.photoURL;
+        document.getElementById('profileName').textContent = currentUser.displayName;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        profileModal.classList.add('show');
+      }
+    }
+
+    function toggleHistory() {
+      historySidebar.classList.toggle('show');
+      overlay.classList.toggle('show');
+    }
+
+    function hideHistory() {
+      historySidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    }
+
+    function saveSearch(query) {
+      if (!query.trim() || !currentUser) return;
+      let history = JSON.parse(localStorage.getItem(`searchHistory_${currentUser.uid}`)) || [];
+      history = history.filter(item => item !== query);
+      history.unshift(query);
+      if (history.length > 10) history.pop();
+      localStorage.setItem(`searchHistory_${currentUser.uid}`, JSON.stringify(history));
+      loadHistory();
+    }
+
+    function loadHistory() {
+      if (!currentUser) return;
+      let history = JSON.parse(localStorage.getItem(`searchHistory_${currentUser.uid}`)) || [];
+      historyList.innerHTML = history.length ? '' : '<div class="no-history">No search history</div>';
+      history.forEach((q, i) => {
+        let div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span>${q}</span><button class="delete-btn">×</button>`;
+        div.onclick = () => {
+          document.querySelector('.inputbox').value = q;
+          hideHistory();
+        };
+        div.querySelector('.delete-btn').onclick = (e) => {
+          e.stopPropagation();
+          history.splice(i, 1);
+          localStorage.setItem(`searchHistory_${currentUser.uid}`, JSON.stringify(history));
+          loadHistory();
+        };
+        historyList.appendChild(div);
+      });
+    }
+
+    function clearHistory() {
+      if (!currentUser) return;
+      localStorage.removeItem(`searchHistory_${currentUser.uid}`);
+      loadHistory();
+    }
+
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+    }
+
+    function feelingLucky() {
+  const query = document.querySelector('.inputbox').value.trim();
+  if (!query) return;
+  
+  // Save search to history
+  saveSearch(query);
+  
+  // Open Google search in new window and redirect to first result using "I'm Feeling Lucky"
+  const luckyUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&btnI=I`;
+  window.location.href = luckyUrl;
+}
+
+// Voice input (optional)
+function startVoice() {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert('Voice recognition not supported in this browser.');
+    return;
+  }
+  
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    document.querySelector('.inputbox').value = transcript;
+  };
+  
+  recognition.onerror = (event) => {
+    console.error('Voice recognition error', event.error);
+  };
+  
+  recognition.start();
+}
+
+// Load dark mode preference
+if (localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark');
+}
+
+// Load search history if user is already signed in
+window.addEventListener('load', () => {
+  if (currentUser) loadHistory();
+});
+
+</script>
+</body>
+</html>
